@@ -1,4 +1,5 @@
 
+using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -24,6 +25,7 @@ namespace API
         {
 
             services.AddControllers();
+            services.AddScoped<IProductRepository,PrdoductRepository>();
             services.AddDbContext<StoreContext>(x=>x.UseSqlite(_config.GetConnectionString("DefaultConnectionString")));
             services.AddSwaggerGen(c =>
             {
