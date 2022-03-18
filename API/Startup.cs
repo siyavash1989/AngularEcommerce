@@ -1,5 +1,7 @@
 
+using API.Extensions;
 using API.Helper;
+using API.Middlewares;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
@@ -25,10 +27,9 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
-            services.AddScoped<IProductRepository,PrdoductRepository>();
-            services.AddAutoMapper(typeof(MappingProfiles));
-            services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
+            services.AddControllers();    
+            services.AddApplicationServices();
+            services.AddAutoMapper(typeof(MappingProfiles));          
             services.AddDbContext<StoreContext>(x=>x.UseSqlite(_config.GetConnectionString("DefaultConnectionString")));
             services.AddSwaggerGen(c =>
             {
@@ -39,12 +40,15 @@ namespace API
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseMiddleware<ExceptionMiddleware>();
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                //app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1"));
             }
+
+            app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
             app.UseHttpsRedirection();
 
