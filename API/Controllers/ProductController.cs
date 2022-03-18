@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using API.Dtos;
 using API.Errors;
+using API.Helper;
 using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
@@ -33,24 +34,30 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ProductDto>>> GetProducts()
+        public async Task<ActionResult<Pagination<ProductDto>>> GetProducts
+            ([FromQuery] ProductSpecParams productParams)
         {
-            var spec = new ProductsWithTypesAndBrandsSpecifications();
+            var countSpec = new ProductsFilterCount(productParams);
+            var spec = new ProductsWithTypesAndBrandsSpecifications(productParams);
             var products = await _productRepository.ListAsync(spec);//.GetAllAsync();
-            return Ok(_mapper.Map<IReadOnlyList<Product>,IReadOnlyList<ProductDto>>(products));
+            var data = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductDto>>(products);
+            var productsCount = await _productRepository.CountAsync(countSpec);
+
+            return Ok(new Pagination<ProductDto>(productParams.PageIndex,
+                productParams.PageSize,data,productsCount));
         }
 
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
             var spec = new ProductsWithTypesAndBrandsSpecifications(id);
             var product = await _productRepository.GetEntityWithSpec(spec);//.GetByIdAsync(id);
-            
-            if(product == null) return NotFound(new ApiResponse(404));
 
-            return _mapper.Map<Product,ProductDto>(product);
+            if (product == null) return NotFound(new ApiResponse(404));
+
+            return _mapper.Map<Product, ProductDto>(product);
         }
 
         [HttpGet("brands")]
