@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 
 namespace API
 {
@@ -19,7 +20,7 @@ namespace API
         private readonly IConfiguration _config;
         public Startup(IConfiguration config)
         {
-            _config = config;            
+            _config = config;
         }
 
 
@@ -27,15 +28,24 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();    
+            services.AddControllers();
             services.AddApplicationServices();
-            services.AddAutoMapper(typeof(MappingProfiles));  
-            services.AddCors(opt=>{
-                opt.AddPolicy("CorsPolicy",policy=>{
+            services.AddScoped<IBasketRepository,BasketRepository>();
+            services.AddSingleton<IConnectionMultiplexer>(c =>
+            {
+                var configuration = ConfigurationOptions.Parse(_config.GetConnectionString("Redis"), 
+                    true);
+                return ConnectionMultiplexer.Connect(configuration);
+            });
+            services.AddAutoMapper(typeof(MappingProfiles));
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy("CorsPolicy", policy =>
+                {
                     policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:5001");
                 });
-            });     
-            services.AddDbContext<StoreContext>(x=>x.UseSqlite(_config.GetConnectionString("DefaultConnectionString")));
+            });
+            services.AddDbContext<StoreContext>(x => x.UseSqlite(_config.GetConnectionString("DefaultConnectionString")));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
