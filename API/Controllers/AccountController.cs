@@ -92,6 +92,10 @@ namespace API.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         {
+            if(await EmailExist(registerDto.Username)) 
+                return new BadRequestObjectResult(new ApiResponse(400,
+                    "ایمیل وارد شده در سامانه موجود است"));
+
             var user = new AppUser
             {
                 DisplayName = registerDto.Displayname,
