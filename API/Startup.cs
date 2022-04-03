@@ -2,8 +2,11 @@
 using API.Extensions;
 using API.Helper;
 using API.Middlewares;
+using Core.Entities.Identity;
 using Core.Interfaces;
 using Infrastructure.Data;
+using Infrastructure.Data.Identity;
+using Infrastructure.Data.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -30,10 +33,11 @@ namespace API
 
             services.AddControllers();
             services.AddApplicationServices();
-            services.AddScoped<IBasketRepository,BasketRepository>();
+            services.AddScoped<IBasketRepository, BasketRepository>();
+            services.AddScoped<ITokenServices, TokenServices>();
             services.AddSingleton<IConnectionMultiplexer>(c =>
             {
-                var configuration = ConfigurationOptions.Parse(_config.GetConnectionString("Redis"), 
+                var configuration = ConfigurationOptions.Parse(_config.GetConnectionString("Redis"),
                     true);
                 return ConnectionMultiplexer.Connect(configuration);
             });
@@ -45,6 +49,13 @@ namespace API
                     policy.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:5001");
                 });
             });
+            
+            services.AddDbContext<AppIdentityDbContext>(x => 
+            { 
+                x.UseSqlite(_config.GetConnectionString("IdentityConnectionString"));
+            });
+
+            services.AddIdentityServices(_config);
             services.AddDbContext<StoreContext>(x => x.UseSqlite(_config.GetConnectionString("DefaultConnectionString")));
             services.AddSwaggerGen(c =>
             {
@@ -71,6 +82,7 @@ namespace API
             app.UseStaticFiles();
 
             app.UseCors("CorsPolicy");
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
