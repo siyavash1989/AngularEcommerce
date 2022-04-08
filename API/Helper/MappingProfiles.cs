@@ -20,8 +20,19 @@ namespace API.Helper
             CreateMap<CustomerBasketItem, CustomerBasketItemDto>().ReverseMap();
             CreateMap<AddressDto, Core.Entities.OrderAggregate.Address>();
 
-            CreateMap<Order, OrderToReturnDto>().ReverseMap();
-            CreateMap<OrderItem, OrderItemDto>().ReverseMap();
+            CreateMap<Order, OrderToReturnDto>()
+                .ForMember(d => d.DeliveryMethod,
+                    o => o.MapFrom(s => s.DeliveryMethod.ShortName))
+                .ForMember(d => d.ShippingPrice,
+                    o => o.MapFrom(s => s.DeliveryMethod.Price));
+            CreateMap<OrderItem, OrderItemDto>()
+                .ForMember(d => d.ProductId,
+                    o => o.MapFrom(s => s.ItemOrdered.ProductItemId))
+                .ForMember(d => d.ProductName,
+                    o => o.MapFrom(s => s.ItemOrdered.ProductName))
+                .ForMember(d => d.PictureUrl,
+                    o => o.MapFrom(s => s.ItemOrdered.PictureUrl))
+                .ForMember(d=>d.PictureUrl, o=>o.MapFrom<OrderItemValueResolver>());
 
         }
     }

@@ -24,7 +24,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Order>> CreateOrder(OrderDto orderDto)
+        public async Task<ActionResult<OrderDto>> CreateOrder(OrderDto orderDto)
         {
             var email = User.FindFirstValue(ClaimTypes.Email);
            
@@ -33,20 +33,19 @@ namespace API.Controllers
             var order = await _orderService.CreateOrderAsync(email, orderDto.DeliveryMethodId, orderDto.BasketId, address);
             
             if (order == null) return BadRequest(new ApiResponse(400, "خطا در ثبت سفارش"));
-            return Ok(order);
+            return Ok(_mapper.Map<Order,OrderToReturnDto>(order));
         }
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<Order>>> GetUserOrders()
+        public async Task<ActionResult<IReadOnlyList<OrderDto>>> GetUserOrders()
         {
             var email = User.FindFirstValue(ClaimTypes.Email);
             var orders = await _orderService.GetUserOrdersAsync(email);
-            return Ok(orders);
-            //return Ok(_mapper.Map<IReadOnlyList<Order>,IReadOnlyList<OrderToReturnDto>>(orders));
+            return Ok(_mapper.Map<IReadOnlyList<Order>,IReadOnlyList<OrderToReturnDto>>(orders));
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Order>> GetOrderById(int id)
+        public async Task<ActionResult<OrderToReturnDto>> GetOrderById(int id)
         {
             var email = User.FindFirstValue(ClaimTypes.Email);
             var order = await _orderService.GetOrderByIdAsync(id, email);
@@ -54,7 +53,7 @@ namespace API.Controllers
             {
                 return NotFound(new ApiResponse(404, "سفارش یافت نشد"));
             }
-            return order;
+            return _mapper.Map<Order,OrderToReturnDto>(order);
         }
 
         [HttpGet("deliveryMethod")]
