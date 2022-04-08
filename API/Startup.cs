@@ -35,6 +35,8 @@ namespace API
             services.AddApplicationServices();
             services.AddScoped<IBasketRepository, BasketRepository>();
             services.AddScoped<ITokenServices, TokenServices>();
+            services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddSingleton<IConnectionMultiplexer>(c =>
             {
                 var configuration = ConfigurationOptions.Parse(_config.GetConnectionString("Redis"),

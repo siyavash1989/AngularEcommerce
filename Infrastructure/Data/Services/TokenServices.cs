@@ -14,7 +14,6 @@ namespace Infrastructure.Data.Services
 {
     public class TokenServices : ITokenServices
     {
-        private readonly UserManager<AppUser> _userManager;
         private readonly SymmetricSecurityKey _key;
         private readonly IConfiguration _config;
         public TokenServices(IConfiguration config)
